@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -19,9 +20,14 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-[--color-border] bg-[color:rgba(8,8,9,0.85)] backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="group flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[--color-primary] text-lg font-semibold text-white shadow-[var(--shadow)] transition-transform duration-300 group-hover:scale-105">
-            TT
-          </span>
+          <Image
+            src="/logo.svg"
+            alt="TAITAI-TECH ロゴ"
+            width={40}
+            height={40}
+            priority
+            className="h-10 w-10 rounded-full border border-white/20 object-contain filter brightness-0 invert transition-transform duration-300 group-hover:scale-105"
+          />
           <div className="flex flex-col leading-tight">
             <span className="text-sm font-semibold uppercase tracking-[0.4em] text-[--color-muted-foreground]">
               TAITAI

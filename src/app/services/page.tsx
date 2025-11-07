@@ -83,7 +83,7 @@ export default function ServicesPage() {
           </article>
         ))}
       </div>
-      <div className="mt-16 border border-[--color-border] bg-[linear-gradient(0deg,rgba(0,0,0,0.1),var(--color-accent))] p-10 text-center text-[--color-foreground]">
+      <div className="mt-16 border border-[--color-border] bg-[radial-gradient(circle_at_top_left,_rgba(179,66,74,0.08),_transparent_65%)] p-10 text-center text-[--color-foreground]">
         <p className="text-lg font-semibold text-[--color-primary]">まだ整理しきれていない構想も、お気軽にご相談ください。</p>
         <p className="mt-2 text-sm text-[--color-muted-foreground]">
           1週間以内にキックオフミーティングを設定し、最適な進め方をご提案します。

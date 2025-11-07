@@ -66,7 +66,7 @@ export default function TeamPage() {
           </article>
         ))}
       </div>
-      <div className="mt-16 border border-[--color-border] bg-[linear-gradient(0deg,rgba(0,0,0,0.1),var(--color-accent))] p-10 text-center">
+      <div className="mt-16 border border-[--color-border] bg-[radial-gradient(circle_at_top_left,_rgba(179,66,74,0.08),_transparent_65%)] p-10 text-center">
         <h2 className="text-2xl font-semibold text-[--color-primary]">
           コラボレーションメンバーも随時募集中
         </h2>

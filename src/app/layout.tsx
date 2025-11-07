@@ -19,6 +19,11 @@ export const metadata: Metadata = {
   title: "TAITAI-TECH | 学生主導のテックコンサルティング集団",
   description:
     "TAITAI-TECHは学生メンバーによるテックスタジオ。生成AI、画像処理、ノーコード、ロボティクスまで幅広く伴走します。",
+    icons: {
+      icon: [
+        { url: "/favicon.svg", type: "image/svg+xml" },
+      ],
+    },
   openGraph: {
     title: "TAITAI-TECH",
     description:
