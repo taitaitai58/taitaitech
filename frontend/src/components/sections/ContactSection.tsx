@@ -3,34 +3,70 @@
 import { FormEvent, useState } from "react";
 
 import { useBracketAnimation } from "@/hooks/useBracketAnimation";
+import { contactSchema, type ContactFormData, type ContactFormInput } from "@/lib/contact";
 
 type FormState = "idle" | "loading" | "success" | "error";
-
-async function fakeSubmit(formData: FormData) {
-  await new Promise((resolve) => setTimeout(resolve, 1200));
-  const email = formData.get("email");
-  if (!email || !String(email).includes("@")) {
-    throw new Error("メールアドレスが正しくありません");
-  }
-}
+type FieldErrors = Partial<Record<keyof ContactFormData, string>>;
 
 export function ContactSection() {
   const sectionRef = useBracketAnimation<HTMLElement>();
   const [state, setState] = useState<FormState>("idle");
   const [message, setMessage] = useState<string>("");
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
     const formData = new FormData(form);
+    const payload: ContactFormInput = {
+      name: String(formData.get("name") ?? ""),
+      email: String(formData.get("email") ?? ""),
+      organization: String(formData.get("organization") ?? ""),
+      message: String(formData.get("message") ?? ""),
+    };
+
+    const parsed = contactSchema.safeParse(payload);
+    if (!parsed.success) {
+      const fieldErrors: FieldErrors = {};
+      for (const issue of parsed.error.issues) {
+        const key = issue.path[0];
+        if (typeof key === "string" && !(key in fieldErrors)) {
+          fieldErrors[key as keyof ContactFormData] = issue.message;
+        }
+      }
+      setErrors(fieldErrors);
+      setState("error");
+      setMessage("入力内容に誤りがあります。各項目をご確認ください。");
+      return;
+    }
+
+    const data: ContactFormData = parsed.data;
 
     setState("loading");
     setMessage("");
+    setErrors({});
 
     try {
-      await fakeSubmit(formData);
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = (await response.json()) as { message?: string };
+      if (!response.ok) {
+        throw new Error(
+          result?.message ??
+            "送信に失敗しました。しばらく経ってからもう一度お試しください。"
+        );
+      }
+
       setState("success");
-      setMessage("送信が完了しました。追ってご連絡いたします。");
+      setMessage(
+        result?.message ?? "送信が完了しました。追ってご連絡いたします。"
+      );
       form.reset();
     } catch (error) {
       setState("error");
@@ -72,51 +108,97 @@ export function ContactSection() {
         </div>
         <form onSubmit={handleSubmit} className="grid gap-4">
           <div className="grid gap-2">
-            <label htmlFor="name" className="text-sm font-semibold text-[--color-foreground]">
-              お名前
+            <label htmlFor="name" className="flex items-center justify-between text-sm font-semibold text-[--color-foreground]">
+              <span>お名前</span>
+              <span className="text-xs font-normal text-[--color-muted-foreground]">100文字以内</span>
             </label>
             <input
               id="name"
               name="name"
               type="text"
               required
-            className="rounded-xl border border-[--color-border] bg-[--color-surface-soft] px-4 py-3 text-sm text-[--color-foreground] shadow-sm transition focus:border-[--color-primary] focus:outline-none focus:ring-2 focus:ring-[--color-primary]/20"
+              maxLength={100}
+              aria-invalid={Boolean(errors.name)}
+              aria-describedby={errors.name ? "name-error" : undefined}
+              className={`rounded-xl border border-[--color-border] bg-[--color-surface-soft] px-4 py-3 text-sm text-[--color-foreground] shadow-sm transition focus:border-[--color-primary] focus:outline-none focus:ring-2 focus:ring-[--color-primary]/20 ${
+                errors.name ? "border-red-400 focus:border-red-500 focus:ring-red-200" : ""
+              }`}
             />
+            {errors.name && (
+              <p id="name-error" className="text-xs text-red-500">
+                {errors.name}
+              </p>
+            )}
           </div>
           <div className="grid gap-2">
-            <label htmlFor="email" className="text-sm font-semibold text-[--color-foreground]">
-              メールアドレス
+            <label htmlFor="email" className="flex items-center justify-between text-sm font-semibold text-[--color-foreground]">
+              <span>メールアドレス</span>
+              <span className="text-xs font-normal text-[--color-muted-foreground]">320文字以内</span>
             </label>
             <input
               id="email"
               name="email"
               type="email"
               required
-            className="rounded-xl border border-[--color-border] bg-[--color-surface-soft] px-4 py-3 text-sm text-[--color-foreground] shadow-sm transition focus:border-[--color-primary] focus:outline-none focus:ring-2 focus:ring-[--color-primary]/20"
+              maxLength={320}
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? "email-error" : undefined}
+              className={`rounded-xl border border-[--color-border] bg-[--color-surface-soft] px-4 py-3 text-sm text-[--color-foreground] shadow-sm transition focus:border-[--color-primary] focus:outline-none focus:ring-2 focus:ring-[--color-primary]/20 ${
+                errors.email ? "border-red-400 focus:border-red-500 focus:ring-red-200" : ""
+              }`}
             />
+            {errors.email && (
+              <p id="email-error" className="text-xs text-red-500">
+                {errors.email}
+              </p>
+            )}
           </div>
           <div className="grid gap-2">
-            <label htmlFor="organization" className="text-sm font-semibold text-[--color-foreground]">
-              所属・団体名（任意）
+            <label htmlFor="organization" className="flex items-center justify-between text-sm font-semibold text-[--color-foreground]">
+              <span>所属・団体名（任意）</span>
+              <span className="text-xs font-normal text-[--color-muted-foreground]">120文字以内</span>
             </label>
             <input
               id="organization"
               name="organization"
               type="text"
-            className="rounded-xl border border-[--color-border] bg-[--color-surface-soft] px-4 py-3 text-sm text-[--color-foreground] shadow-sm transition focus:border-[--color-primary] focus:outline-none focus:ring-2 focus:ring-[--color-primary]/20"
+              maxLength={120}
+              aria-invalid={Boolean(errors.organization)}
+              aria-describedby={errors.organization ? "organization-error" : undefined}
+              className={`rounded-xl border border-[--color-border] bg-[--color-surface-soft] px-4 py-3 text-sm text-[--color-foreground] shadow-sm transition focus:border-[--color-primary] focus:outline-none focus:ring-2 focus:ring-[--color-primary]/20 ${
+                errors.organization
+                  ? "border-red-400 focus:border-red-500 focus:ring-red-200"
+                  : ""
+              }`}
             />
+            {errors.organization && (
+              <p id="organization-error" className="text-xs text-red-500">
+                {errors.organization}
+              </p>
+            )}
           </div>
           <div className="grid gap-2">
-            <label htmlFor="message" className="text-sm font-semibold text-[--color-foreground]">
-              ご相談内容
+            <label htmlFor="message" className="flex items-center justify-between text-sm font-semibold text-[--color-foreground]">
+              <span>ご相談内容</span>
+              <span className="text-xs font-normal text-[--color-muted-foreground]">4000文字以内</span>
             </label>
             <textarea
               id="message"
               name="message"
               rows={5}
               required
-            className="rounded-xl border border-[--color-border] bg-[--color-surface-soft] px-4 py-3 text-sm text-[--color-foreground] shadow-sm transition focus:border-[--color-primary] focus:outline-none focus:ring-2 focus:ring-[--color-primary]/20"
+              maxLength={4000}
+              aria-invalid={Boolean(errors.message)}
+              aria-describedby={errors.message ? "message-error" : undefined}
+              className={`rounded-xl border border-[--color-border] bg-[--color-surface-soft] px-4 py-3 text-sm text-[--color-foreground] shadow-sm transition focus:border-[--color-primary] focus:outline-none focus:ring-2 focus:ring-[--color-primary]/20 ${
+                errors.message ? "border-red-400 focus:border-red-500 focus:ring-red-200" : ""
+              }`}
             />
+            {errors.message && (
+              <p id="message-error" className="text-xs text-red-500">
+                {errors.message}
+              </p>
+            )}
           </div>
           <button
             type="submit"

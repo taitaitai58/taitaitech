@@ -21,10 +21,12 @@ export function useBracketAnimation<T extends HTMLElement>() {
       return;
     }
 
+    //ブラウザAPIを使ってみる。インスタンス作成したらずっと読み取ってくれる
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
+            //仮想DOMではなく、生のDOMを操作している。再レンダーされると仮想DOMの内容に置き換わる。
             entry.target.classList.add("section-bracket--visible");
           } else {
             entry.target.classList.remove("section-bracket--visible");
