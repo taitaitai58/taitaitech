@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
-
 export const runtime = "nodejs";
 
 import { contactSchema } from "@/lib/contact";
@@ -31,18 +29,34 @@ if (!contactRecipient) {
   console.warn("[contact] CONTACT_RECIPIENT_EMAIL が設定されていません。");
 }
 
-const createTransporter = () =>
-  smtpUser && smtpPass
-    ? nodemailer.createTransport({
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpPort === 465,
-        auth: {
-          user: smtpUser,
-          pass: smtpPass,
-        },
-      })
-    : null;
+type NodemailerModule = typeof import("nodemailer");
+
+let nodemailerModule: Promise<NodemailerModule> | null = null;
+
+const loadNodemailer = () => {
+  if (!nodemailerModule) {
+    nodemailerModule = import("nodemailer");
+  }
+  return nodemailerModule;
+};
+
+const createTransporter = async () => {
+  if (!smtpUser || !smtpPass) {
+    return null;
+  }
+
+  const nodemailer = await loadNodemailer();
+
+  return nodemailer.createTransport({
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpPort === 465,
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
+    },
+  });
+};
 
 export async function POST(request: Request) {
   try {
@@ -72,7 +86,7 @@ export async function POST(request: Request) {
 
     const { name, email, organization, message } = parsed.data;
 
-    const transporter = createTransporter();
+    const transporter = await createTransporter();
     if (!transporter || !contactRecipient) {
       return NextResponse.json(
         {
