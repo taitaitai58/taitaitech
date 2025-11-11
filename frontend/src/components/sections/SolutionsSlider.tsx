@@ -67,6 +67,8 @@ const AUTO_SCROLL_DELAY = 2000; // ms
 const AUTO_SCROLL_SPEED = 70; // px per second
 const GLITCH_START = 0.4; // progress threshold where text starts to glitch
 const GLITCH_END = 0.7; // progress at which text is fully glitched (≈3 cards)
+const MASK_GRADIENT =
+  "linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.65) 6%, rgba(0,0,0,1) 18%, rgba(0,0,0,1) 82%, rgba(0,0,0,0.65) 94%, rgba(0,0,0,0) 100%)";
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -128,29 +130,6 @@ export function SolutionsSlider() {
     [markInteraction],
   );
 
-  const [maskStyle, setMaskStyle] = useState<React.CSSProperties>({});
-
-  useEffect(() => {
-    const gradient =
-      "linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.65) 6%, rgba(0,0,0,1) 18%, rgba(0,0,0,1) 82%, rgba(0,0,0,0.65) 94%, rgba(0,0,0,0) 100%)";
-
-    const supportsMask =
-      typeof CSS !== "undefined" &&
-      typeof CSS.supports === "function" &&
-      (CSS.supports("mask-image", gradient) || CSS.supports("-webkit-mask-image", gradient));
-
-    if (supportsMask) {
-      setMaskStyle({
-        WebkitMaskImage: gradient,
-        maskImage: gradient,
-        WebkitMaskRepeat: "no-repeat",
-        maskRepeat: "no-repeat",
-      });
-    } else {
-      setMaskStyle({});
-    }
-  }, []);
-
   useEffect(() => {
     if (typeof document === "undefined") return;
     const styleId = "solutions-scrollbar-hide";
@@ -158,6 +137,11 @@ export function SolutionsSlider() {
 
     const styleElement = document.createElement("style");
     styleElement.id = styleId;
+    const supportsMask =
+      typeof CSS !== "undefined" &&
+      typeof CSS.supports === "function" &&
+      (CSS.supports("mask-image", MASK_GRADIENT) || CSS.supports("-webkit-mask-image", MASK_GRADIENT));
+
     styleElement.textContent = `
 .solutions-scroll {
   scrollbar-width: none;
@@ -167,6 +151,13 @@ export function SolutionsSlider() {
 .solutions-scroll::-webkit-scrollbar {
   display: none;
 }
+
+${supportsMask ? `.solutions-scroll {
+  -webkit-mask-image: ${MASK_GRADIENT};
+  mask-image: ${MASK_GRADIENT};
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}` : ""}
 `;
 
     document.head.appendChild(styleElement);
@@ -340,7 +331,7 @@ export function SolutionsSlider() {
       dragPointerTypeRef.current = null;
       setIsDragging(false);
     };
-  }, [markInteraction]);
+  }, [markInteraction, normalizeScroll]);
 
   return (
     <section
@@ -384,7 +375,7 @@ export function SolutionsSlider() {
       <div
         ref={containerRef}
           className={`solutions-scroll flex gap-6 overflow-x-auto pb-6 sm:gap-8 ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
-          style={{ ...maskStyle, touchAction: "auto" }}
+          style={{ touchAction: "auto" }}
         >
           {carouselItems.map(({ item, key }, idx) => {
             const progress = cardProgress[idx] ?? 0;
