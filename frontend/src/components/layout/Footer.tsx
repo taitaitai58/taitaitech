@@ -45,13 +45,13 @@ export function Footer() {
               連絡先
             </p>
             <ul className="space-y-2">
-              <li>contact@taitai-tech.example</li>
-              <li>京都・大阪・東京（リモート対応可）</li>
+              <li>contact@taitai-tech.com</li>
+              <li>対面可能:大阪・京都</li>
             </ul>
           </div>
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-[--color-muted-foreground]">
-              SNS
+              SNS(準備中)
             </p>
             <ul className="space-y-2">
               <li>

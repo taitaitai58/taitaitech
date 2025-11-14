@@ -14,9 +14,9 @@ export default function Home() {
         <SolutionsSlider />
         <ContactSection />
       </div>
-      <p className="mt-16 text-center text-sm text-white-500">
+      {/* <p className="mt-16 text-center text-sm text-white-500">
         このサイトはデモです。現在、このような組織は存在していません。
-      </p>
+      </p> */}
     </div>
   );
 }
